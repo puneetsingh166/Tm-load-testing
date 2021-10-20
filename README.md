@@ -1,30 +1,33 @@
 # tm-load-test Custom client for cosmos chain.
-In order to build and use the tools, you will need:
+In order to use the tools, you will need:
 
 * Go 1.13+
+* 
 * ## Building
-To build the `tm-load-test` binary in the `build` directory:
+To build the `tm-load-test Custom client` binary go in the `customclient/my-cosmos-tester` directory:
+Run this command ``` go build ```
+
 ## Usage
-`tm-load-test` can be executed in one of two modes: **standalone**, or
+`tm-load-test Custom client` can be executed in one of two modes: **standalone**, or
 **master/slave**.
 
 ### Standalone Mode
-In standalone mode, `tm-load-test` operates in a similar way to `tm-bench`:
+In standalone mode, `tm-load-test Custom client` operates in a similar way to `tm-bench`:
 
 ```bash
-tm-load-test -c 1 -T 10 -r 1000 -s 250 \
+my-cosmos-tester -c 1 -T 10 -r 1000 -s 250 \
     --broadcast-tx-method async \
     --endpoints ws://tm-endpoint1.somewhere.com:26657/websocket,ws://tm-endpoint2.somewhere.com:26657/websocket
 ```
 To see a description of what all of the parameters mean, simply run:
 
 ```bash
-tm-load-test --help
+my-cosmos-tester --help
 ```
 
 ### Master/Slave Mode
 In master/slave mode, which is best used for large-scale, distributed load 
-testing, `tm-load-test` allows you to have multiple slave machines connect to
+testing, `tm-load-test Custom client` allows you to have multiple slave machines connect to
 a single master to obtain their configuration and coordinate their operation.
 
 The master acts as a simple WebSockets host, and the slaves are WebSockets
@@ -33,10 +36,10 @@ clients.
 On the master machine:
 
 ```bash
-# Run tm-load-test with similar parameters to the standalone mode, but now 
+# Run tm-load-test Custom client with similar parameters to the standalone mode, but now 
 # specifying the number of slaves to expect (--expect-slaves) and the host:port
 # to which to bind (--bind) and listen for incoming slave requests.
-tm-load-test \
+my-cosmos-tester \
     master \
     --expect-slaves 2 \
     --bind localhost:26670 \
@@ -49,18 +52,18 @@ On each slave machine:
 
 ```bash
 # Just tell the slave where to find the master - it will figure out the rest.
-tm-load-test slave --master localhost:26680
+my-cosmos-tester slave --master ws://localhost:26680
 ```
 
 For more help, see the command line parameters' descriptions:
 
 ```bash
-tm-load-test master --help
-tm-load-test slave --help
+my-cosmos-tester master --help
+my-cosmos-tester slave --help
 ```
 
 ## Monitoring
-As of v0.4.1, `tm-load-test` exposes a number of metrics when in master/slave 
+As of v0.4.1, `tm-load-test Custom client` exposes a number of metrics when in master/slave 
 mode, but only from the master's web server at the `/metrics` endpoint. So if
 you bind your master node to `localhost:26670`, you should be able to get these
 metrics from:
@@ -96,18 +99,18 @@ The following kinds of metrics are made available here:
   `--load-test-id` flag on the master
 
 ## Aggregate Statistics
-As of `tm-load-test` v0.7.0, one can now write simple aggregate statistics to
+As of `tm-load-test Custom client` one can now write simple aggregate statistics to
 a CSV file once testing completes by specifying the `--stats-output` flag:
 
 ```bash
 # In standalone mode
-tm-load-test -c 1 -T 10 -r 1000 -s 250 \
+my-cosmos-tester -c 1 -T 10 -r 1000 -s 250 \
     --broadcast-tx-method async \
     --endpoints ws://tm-endpoint1.somewhere.com:26657/websocket,ws://tm-endpoint2.somewhere.com:26657/websocket \
     --stats-output /path/to/save/stats.csv
 
 # From the master in master/slave mode
-tm-load-test \
+my-cosmos-tester \
     master \
     --expect-slaves 2 \
     --bind localhost:26670 \

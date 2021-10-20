@@ -1,0 +1,31 @@
+name: cosmos Testing 
+on:
+  push:
+    branches: [master]
+
+jobs:
+  testingcosmos:
+    runs-on: ubuntu-latest
+    defaults: 
+      run:
+        working-directory: ./customclient/my-cosmos-tester
+    steps:
+     - name: checkout code from master
+       uses: actions/checkout@master
+     - name: build binary in ubutnu
+       run: go build
+     - name: set binary in ubuntu's enviroment 
+       run: sudo cp my-cosmos-tester /usr/bin/my-cosmos-tester
+     - name: Run Master-slave client test case 1 with  -c 1 -T 20 -r 1000 -s 250
+       run: sudo bash master-slave-test1.sh
+     - name: Display Master-slave client test case 1's logs..
+       run: cat logs.txt
+     - name: Run Master-slave client test case 2 with   -c 1 -T 15 -r 200 -s 2500
+       run: sudo bash master-slave-test2.sh
+     - name: Display Master-slave client test case 2's logs..
+       run: cat logsTest2.txt
+     - name: Run Master-slave client test case 3 with   -c 1 -T 10 -r 10 -s 310
+       run: sudo bash master-slave-test3.sh
+     - name: Display Master-slave client test case 3's logs.
+       run: cat logstest3.txt
+    

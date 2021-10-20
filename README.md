@@ -2,8 +2,7 @@
 In order to use the tools, you will need:
 
 * Go 1.13+
-* 
-* ## Building
+ ## Building
 To build the `tm-load-test custom client` binary go in the `customclient/my-cosmos-tester` directory:
 Run this command ``` go build ```
 
@@ -63,7 +62,7 @@ my-cosmos-tester slave --help
 ```
 
 ## Monitoring
-As of v0.4.1, `tm-load-test custom client` exposes a number of metrics when in master/slave 
+`tm-load-test custom client` exposes a number of metrics when in master/slave 
 mode, but only from the master's web server at the `/metrics` endpoint. So if
 you bind your master node to `localhost:26670`, you should be able to get these
 metrics from:
@@ -94,7 +93,7 @@ The following kinds of metrics are made available here:
   * 4 = Slave failed
   * 5 = Slave completed load testing successfully
 * Standard Prometheus-provided metrics about the garbage collector in 
-  `tm-load-test`
+  `tm-load-test custom client`
 * The ID of the load test currently underway (defaults to 0), set by way of the
   `--load-test-id` flag on the master
 

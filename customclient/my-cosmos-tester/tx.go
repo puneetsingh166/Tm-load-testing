@@ -1,11 +1,11 @@
 package main
 import (
-	   banktypes "github.com/puneetsingh166/tm-load-test/x/bank/types"
+     banktypes "github.com/puneetsingh166/tm-load-test/x/bank/types"
      "github.com/puneetsingh166/tm-load-test/simapp"
      "github.com/puneetsingh166/tm-load-test/types"
      "fmt"
      "github.com/puneetsingh166/tm-load-test/types/tx/signing"
-	   xauthsigning "github.com/puneetsingh166/tm-load-test/x/auth/signing"
+     xauthsigning "github.com/puneetsingh166/tm-load-test/x/auth/signing"
      "github.com/puneetsingh166/tm-load-test/client/tx"
      cryptotypes "github.com/puneetsingh166/tm-load-test/crypto/types"
      "github.com/puneetsingh166/tm-load-test/testutil/testdata"
@@ -13,8 +13,10 @@ import (
 
 func GenTX() ([]byte){
   encCfg := simapp.MakeTestEncodingConfig()
+  
   // Create a new TxBuilder.
-	txBuilder := encCfg.TxConfig.NewTxBuilder()
+  
+  txBuilder := encCfg.TxConfig.NewTxBuilder()
   priv1, _, addr1 := testdata.KeyTestPubAddr()
   _, _, addr2 := testdata.KeyTestPubAddr()
   msg1 := banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("footoken", 1)))
@@ -32,7 +34,6 @@ func GenTX() ([]byte){
   //------------------------------- ------Signing a Transaction---------------------------------//
   
   privs := []cryptotypes.PrivKey{priv1}
-
   var sigsV2 []signing.SignatureV2
    for _, priv := range privs {
 	  sigV2 := signing.SignatureV2{

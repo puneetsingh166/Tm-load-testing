@@ -10,7 +10,7 @@ jobs:
       run:
         working-directory: ./customclient/my-cosmos-tester
     steps:
-     - name: checkout code from master
+     - name: checkout code from master..
        uses: actions/checkout@master
      - name: build binary in ubuntu
        run: go build

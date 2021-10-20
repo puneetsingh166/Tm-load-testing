@@ -1,0 +1,24 @@
+name: cosmos Testing 
+on:
+  push:
+    branches: [master]
+
+jobs:
+  testingcosmos:
+    runs-on: ubuntu-latest
+    defaults: 
+      run:
+        working-directory: ./customclient/my-cosmos-tester
+    steps:
+     - name: checkout code from master
+       uses: actions/checkout@master
+     - name: build binary in ubuntu
+       run: go build
+     - name: set binary in ubuntu's enviroment 
+       run: sudo cp my-cosmos-tester /usr/bin/my-cosmos-tester
+     - name: Checking client exist or not 
+       run: my-cosmos-tester --help
+     - name: Run standalone client's command
+       run: my-cosmos-tester -c 1 -T 10 -r 10 -s 250 --broadcast-tx-method async --endpoints ws://139.178.81.235:26657/websocket  --stats-output ./stats.csv 
+     - name: Display logs of standlone load test
+       run: cat stats.csv 

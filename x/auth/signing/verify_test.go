@@ -1,0 +1,106 @@
+package signing_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/puneetsingh166/tm-load-test/codec"
+	kmultisig "github.com/puneetsingh166/tm-load-test/crypto/keys/multisig"
+	cryptotypes "github.com/puneetsingh166/tm-load-test/crypto/types"
+	"github.com/puneetsingh166/tm-load-test/crypto/types/multisig"
+	"github.com/puneetsingh166/tm-load-test/simapp"
+	"github.com/puneetsingh166/tm-load-test/testutil/testdata"
+	sdk "github.com/puneetsingh166/tm-load-test/types"
+	"github.com/puneetsingh166/tm-load-test/x/auth/ante"
+	"github.com/puneetsingh166/tm-load-test/x/auth/migrations/legacytx"
+	"github.com/puneetsingh166/tm-load-test/x/auth/signing"
+	"github.com/puneetsingh166/tm-load-test/x/auth/types"
+	"github.com/puneetsingh166/tm-load-test/x/bank/testutil"
+)
+
+func TestVerifySignature(t *testing.T) {
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	priv1, pubKey1, addr1 := testdata.KeyTestPubAddr()
+
+	const (
+		memo    = "testmemo"
+		chainId = "test-chain"
+	)
+
+	app, ctx := createTestApp(t, false)
+	ctx = ctx.WithBlockHeight(1)
+
+	cdc := codec.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
+
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	_ = app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	balances := sdk.NewCoins(sdk.NewInt64Coin("atom", 200))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
+	acc, err := ante.GetSignerAcc(ctx, app.AccountKeeper, addr)
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
+
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	signerData := signing.SignerData{
+		ChainID:       chainId,
+		AccountNumber: acc.GetAccountNumber(),
+		Sequence:      acc.GetSequence(),
+	}
+	signBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
+	signature, err := priv.Sign(signBytes)
+	require.NoError(t, err)
+
+	stdSig := legacytx.StdSignature{PubKey: pubKey, Signature: signature}
+	sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig)
+	require.NoError(t, err)
+
+	handler := MakeTestHandlerMap()
+	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo)
+	stdTx.TimeoutHeight = 10
+	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
+	require.NoError(t, err)
+
+	pkSet := []cryptotypes.PubKey{pubKey, pubKey1}
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
+	multisignature := multisig.NewMultisig(2)
+	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}
+	multiSignBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
+
+	sig1, err := priv.Sign(multiSignBytes)
+	require.NoError(t, err)
+	stdSig1 := legacytx.StdSignature{PubKey: pubKey, Signature: sig1}
+	sig1V2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig1)
+	require.NoError(t, err)
+
+	sig2, err := priv1.Sign(multiSignBytes)
+	require.NoError(t, err)
+	stdSig2 := legacytx.StdSignature{PubKey: pubKey, Signature: sig2}
+	sig2V2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig2)
+	require.NoError(t, err)
+
+	err = multisig.AddSignatureFromPubKey(multisignature, sig1V2.Data, pkSet[0], pkSet)
+	require.NoError(t, err)
+	err = multisig.AddSignatureFromPubKey(multisignature, sig2V2.Data, pkSet[1], pkSet)
+	require.NoError(t, err)
+
+	stdTx = legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig1, stdSig2}, memo)
+	stdTx.TimeoutHeight = 10
+
+	err = signing.VerifySignature(multisigKey, signerData, multisignature, handler, stdTx)
+	require.NoError(t, err)
+}
+
+// returns context and app with params set on account keeper
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(t, isCheckTx)
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, types.DefaultParams())
+
+	return app, ctx
+}

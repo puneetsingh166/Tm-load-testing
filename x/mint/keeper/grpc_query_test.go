@@ -1,0 +1,56 @@
+package keeper_test
+
+import (
+	gocontext "context"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/puneetsingh166/tm-load-test/baseapp"
+	"github.com/puneetsingh166/tm-load-test/simapp"
+	sdk "github.com/puneetsingh166/tm-load-test/types"
+	"github.com/puneetsingh166/tm-load-test/x/mint/types"
+)
+
+type MintTestSuite struct {
+	suite.Suite
+
+	app         *simapp.SimApp
+	ctx         sdk.Context
+	queryClient types.QueryClient
+}
+
+func (suite *MintTestSuite) SetupTest() {
+	app := simapp.Setup(suite.T(), false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.MintKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	suite.app = app
+	suite.ctx = ctx
+
+	suite.queryClient = queryClient
+}
+
+func (suite *MintTestSuite) TestGRPCParams() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+
+	params, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(params.Params, app.MintKeeper.GetParams(ctx))
+
+	inflation, err := queryClient.Inflation(gocontext.Background(), &types.QueryInflationRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(inflation.Inflation, app.MintKeeper.GetMinter(ctx).Inflation)
+
+	annualProvisions, err := queryClient.AnnualProvisions(gocontext.Background(), &types.QueryAnnualProvisionsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(annualProvisions.AnnualProvisions, app.MintKeeper.GetMinter(ctx).AnnualProvisions)
+}
+
+func TestMintTestSuite(t *testing.T) {
+	suite.Run(t, new(MintTestSuite))
+}

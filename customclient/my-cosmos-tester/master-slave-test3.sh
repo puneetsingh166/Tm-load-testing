@@ -1,6 +1,6 @@
 #!/bin/bash
-
-my-cosmos-tester master --expect-slaves 1 --bind localhost:26670 -c 1 -T 10 -r 10 -s 310 --broadcast-tx-method async --endpoints ws://139.178.81.235:26657/websocket,ws://145.40.102.9:26657/websocket &
+IP=$1
+my-cosmos-tester master --expect-slaves 1 --bind localhost:26670 -c 1 -T 10 -r 10 -s 310 --broadcast-tx-method async --endpoints ws://$IP:26657/websocket &
 my-cosmos-tester slave --master ws://localhost:26670 &
 destdir=./logstest3.txt
 while true

@@ -16,16 +16,16 @@ jobs:
        run: go build
      - name: set binary in ubuntu's enviroment 
        run: sudo cp my-cosmos-tester /usr/bin/my-cosmos-tester
-     - name: Run Master-slave client test case 1 with  -c 1 -T 20 -r 1000 -s 250
-       run: sudo bash master-slave-test1.sh
+     - name: Run Master-slave client test case 1 with  -c 1 -T 20 -r 1000 -s 250 
+       run: sudo bash master-slave-test1.sh 145.40.102.9
      - name: Display Master-slave client test case 1's logs..
        run: cat logs.txt
      - name: Run Master-slave client test case 2 with   -c 1 -T 15 -r 200 -s 2500
-       run: sudo bash master-slave-test2.sh
+       run: sudo bash master-slave-test2.sh 145.40.102.9
      - name: Display Master-slave client test case 2's logs..
        run: cat logsTest2.txt
      - name: Run Master-slave client test case 3 with   -c 1 -T 10 -r 10 -s 310
-       run: sudo bash master-slave-test3.sh
+       run: sudo bash master-slave-test3.sh 145.40.102.9
      - name: Display Master-slave client test case 3's logs.
        run: cat logstest3.txt
     
